@@ -1,0 +1,176 @@
+#contribution:
+
+here’s a complete, ready-to-execute plan to make a small but meaningful contribution to LogChimp by opening a PR to improve their “Install from Source” docs. This hits exactly what your prompt asks for: explore the codebase/docs, spot concrete improvements, implement them, and communicate the reasoning.
+
+What we’ll change (scope of the PR)
+Target: the documentation page “Install from Source.”
+Why this page: It contains a few correctness & clarity issues that are easy to fix yet valuable for new contributors.
+
+Issues found
+Outdated / brittle Node.js prerequisite.
+The page says “Node.js (v12)” which is both EOL and can drift from the repo’s chosen runtime. A better source of truth is the repo’s .nvmrc (present at the repo root), so docs should tell contributors to use the version pinned in .nvmrc rather than hard-coding v12. 
+GitHub
+
+Incorrect Docker port flag for Postgres.
+The page shows -p 5432 which exposes a random high host port; for local development you want a stable mapping -p 5432:5432. 
+LogChimp
+
+Brand capitalization of pnpm.
+It’s written “pNpm,” the correct brand spelling is pnpm. 
+LogChimp
+
+Small clarity boosts.
+
+Show nvm use right before pnpm install so newcomers actually get the right Node version.
+
+Mention that the codebase is split into server and theme workspaces (which the docs allude to), and keep the “two terminals” run commands as-is. 
+LogChimp
++1
+
+Concrete edits (what to put in your commit)
+The docs live in this repo under /content/. Search for the file that renders the Install from Source page (slug /install/source/). It will likely be something like:
+
+content/install/source.mdx or
+
+content/install/source/index.mdx
+(use GitHub’s repo search for the phrase “Install from Source”.)
+
+Patch (unified diff you can adapt to the actual path)
+--- a/content/install/source.mdx
++++ b/content/install/source.mdx
+@@
+-## Prerequisites
+-
+-Before getting started, you'll need these global packages installed:
+-
+-  * Node.js (v12) - the easiest way to install is via nvm
+-  * pNpm - for managing dependencies
+-  * PostgreSQL (v12) - PostgreSQL database
+-
+-You can read more about the engine requirements from the package.json on GitHub.
++## Prerequisites
++
++Before getting started, install the following:
++
++  * **Node.js (use the version in `.nvmrc`)** – the easiest way is via **nvm**
++  * **pnpm** – for managing workspace dependencies
++  * **PostgreSQL 12+** – local database for development
++
++> Tip: using the version from `.nvmrc` keeps your local setup aligned with the repository.
+@@
+-## Install dependencies
+-
+-    pnpm install
++## Install dependencies
++
++    nvm use
++    pnpm install
+@@
+-    docker run -d \
+-      --name db \
+-      -p 5432 \
+-      -e POSTGRES_DB=$database_name \
+-      -e POSTGRES_USER=$database_user \
+-      -e POSTGRES_PASSWORD=$strong_password \
+-      postgres:12.4
++    docker run -d \
++      --name db \
++      -p 5432:5432 \
++      -e POSTGRES_DB=$database_name \
++      -e POSTGRES_USER=$database_user \
++      -e POSTGRES_PASSWORD=$strong_password \
++      -v logchimp_db_data:/var/lib/postgresql/data \
++      postgres:12.4
+@@
+-You need two separate terminal windows to run the client and backend separately.
++You need two terminals: one for the **core APIs (server)** and one for the **default theme (client)**.
+Why these changes are safe & useful
+
+They remove a stale Node version and point contributors to the single source of truth (.nvmrc). 
+GitHub
+
+They fix an actual connection bug in the Docker example (-p 5432:5432). 
+LogChimp
+
+They align naming and add a commonly-missed step (nvm use) to prevent version mismatch errors. 
+LogChimp
+
+They reinforce the server/theme split reflected in the architecture. 
+LogChimp
+
+How to implement & submit (step-by-step)
+Fork & clone
+
+gh repo fork logchimp/logchimp --clone
+cd logchimp
+Create a branch
+
+git checkout -b docs/fix-install-from-source
+Find the page file
+
+On GitHub, press t to open file finder and search for install/source.
+
+Or use code search for the string Node.js (v12) to locate the exact file.
+
+Apply the patch
+
+Edit the file as per the diff above (path may vary under /content/…).
+
+Build or at least lint docs locally (optional)
+
+nvm use
+pnpm install
+# If there is a docs build or typecheck script, run it (e.g., pnpm run build:docs)
+Commit & push
+
+git add .
+git commit -m "docs: fix Postgres port mapping, use .nvmrc for Node version, standardize pnpm, add nvm use"
+git push -u origin docs/fix-install-from-source
+Open the PR
+
+Title: docs: fix install-from-source (Node via .nvmrc, pnpm casing, Postgres port)
+
+PR body (use this template):
+
+### Summary
+Small docs improvements on /install/source:
+
+- Replace hard-coded “Node.js (v12)” with “use the version in `.nvmrc`”
+- Standardize “pnpm” capitalization
+- Correct Postgres Docker example to `-p 5432:5432` and add a named volume
+- Add `nvm use` before `pnpm install`
+- Clarify two-terminal setup (server + theme)
+
+### Motivation
+- Keeps runtime aligned with repository config (`.nvmrc`) and avoids EOL Node. 
+- Corrects the Postgres port mapping so the app can reliably connect on localhost.
+- Reduces onboarding friction for first-time contributors.
+
+### References
+- Docs page being updated: Install from Source
+- Project architecture (server + theme): Architecture docs
+
+### Impact
+Docs-only change; no runtime behavior. Improves local setup reliability for new contributors.
+How this demonstrates your approach
+Exploration: You read the official docs & repo layout (server/theme, .nvmrc, pnpm workspaces). 
+GitHub
+LogChimp
+
+Insight: You identified correctness issues (Docker port), maintenance smell (hard-coded Node), and wording tweaks. 
+LogChimp
+
+Communication: Your PR body explains what, why, and impact crisply, and links to authoritative pages.
+
+Stretch ideas (optional follow-ups after this PR)
+Add a short “Dev quickstart” block in README.md that links to the install page and shows:
+
+nvm use && pnpm install
+pnpm --filter @logchimp/server dev    # terminal 1
+pnpm --filter @logchimp/theme dev     # terminal 2
+(Match the actual workspace names once you confirm them in pnpm-workspace.yaml.) 
+GitHub
+
+Open a separate PR to the docs to add a Troubleshooting section (e.g., common Postgres connection errors).
+
+If you want, I can also draft the exact Git commit for you once you paste the path of the file that backs /install/source/.
